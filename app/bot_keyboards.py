@@ -3,7 +3,7 @@ from utils import get_config_data
 import os
 
 # Получение из конфиг файла или из переменной окружения, основных констант бота
-config_vars = get_config_data("settings/bot_config.json")
+config_vars = get_config_data("settings/config.json")
 env_vars = os.environ
 HELP_URL = env_vars.get('HELP_URL', config_vars['HELP_URL'])
 

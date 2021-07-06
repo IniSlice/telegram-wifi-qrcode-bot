@@ -8,10 +8,11 @@ import utils
 import fsm
 
 # Получение из конфиг файла или из переменной окружения, основных констант бота
-config_vars = utils.get_config_data("settings/bot_config.json")
+config_vars = utils.get_config_data("settings/config.json")
 env_vars = os.environ
 TOKEN = env_vars.get('TOKEN', config_vars['TOKEN'])
 APP_URL = env_vars.get('APP_URL', config_vars['APP_URL'])
+PAYMENTS_PROVIDER_TOKEN = env_vars.get('PAYMENTS_PROVIDER_TOKEN', config_vars['PAYMENTS_PROVIDER_TOKEN'])
 
 bot = telebot.TeleBot(TOKEN)
 server = Flask(__name__)
@@ -239,6 +240,47 @@ def get_password(message):
         # сбрасываем состояние
         fsm.set_state(chat_id, fsm.States.S_START.value)
 
+"""
+Для оплаты могут использоватся данные тестовой карты: 1111 1111 1111 1026, 12/22, CVC 000.
+"""
+# Список цен общего платежа
+prices = [types.LabeledPrice(label='На развитие проекта', amount=25000)]
+
+# Формирование платежа
+@bot.message_handler(commands=['donate'])
+def command_pay(message):
+    bot.send_invoice(message.chat.id, title='На развитие проекта',
+                     description='Если хотите поддержать автора данного бота.',
+                     provider_token=PAYMENTS_PROVIDER_TOKEN,
+                     currency='rub',
+                    #  photo_url='http://erkelzaar.tsudao.com/models/perrotta/TIME_MACHINE.jpg',
+                    #  photo_height=512,  # !=0/None or picture won't be shown
+                    #  photo_width=512,
+                    #  photo_size=512,
+                     prices=prices,
+                     start_parameter='time-machine-example',
+                     invoice_payload='some-invoice-payload-for-our-internal-use')
+
+# В случае ошибки при оплате
+@bot.pre_checkout_query_handler(func=lambda query: True)
+def checkout(pre_checkout_query):
+    bot.answer_pre_checkout_query(
+        pre_checkout_query.id,
+        ok=True,
+        error_message="При оплате произошла ошибка транзакции!\nПопробуйте заплатить еще раз через несколько минут.")
+
+# В случае успешной оплаты
+@bot.message_handler(content_types=['successful_payment'])
+def got_payment(message):
+    total_amount = message.successful_payment.total_amount / 100
+    currency_code =  message.successful_payment.currency
+    bot.send_sticker(message.chat.id, 'CAACAgIAAxkBAAECg-9g3bSfGh2c27gORfMKMsafrbWrxwAClAIAAkcVaAmR876wugABwasgBA')
+    bot.send_message(
+        message.chat.id,
+        f"Спасибо за оплату! Мы обработаем ваш заказ на '{total_amount} {currency_code}' как можно быстрее!",
+        parse_mode='Markdown')
+
+
 # Создаем список со всеми content_types
 BOT_CONTENT_TYPES = [
     "text", "audio", "document", 
@@ -261,6 +303,7 @@ def any_unknown_message(message):
         message=message, 
         disable_web_page_preview=True, 
         text=message_text+"Для вызова справки и полного списка доступных команд введите - /help")
+
 
 # В файле "Procfile" было прописанно значение web: gunicorn bot:server
 # Настраиваем webhooks и Запускаем web-сервер на Heroku
