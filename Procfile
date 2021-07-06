@@ -1,0 +1,1 @@
+web: python3 app/bot.py runserver 0.0.0.0:5000

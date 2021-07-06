@@ -1,0 +1,8 @@
+{
+    "data": {
+        "TOKEN": "<YOUR_BOT_TOKEN>",
+        "APP_URL": "<YOUR_APP_HOST_URL>",
+        "BOT_URL": "<YOUR_TELEGRAM_BOT_URL>",
+        "HELP_URL": "<YOUR_TELEGRAM_PROFILE_URL>"
+    }
+}
