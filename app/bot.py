@@ -262,7 +262,7 @@ def any_unknown_message(message):
         disable_web_page_preview=True, 
         text=message_text+"Для вызова справки и полного списка доступных команд введите - /help")
 
-
+# В файле "Procfile" было прописанно значение web: gunicorn bot:server
 # Настраиваем webhooks и Запускаем web-сервер на Heroku
 def set_webhooks():
     @server.route('/' + TOKEN, methods=['POST'])
